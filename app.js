@@ -42,7 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (file) {
             if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
                 showError('Te rugăm să selectezi un fișier JSON valid.');
-                credsFileName.value = 'creds.json';
+                credsFileName.value = '';
+                credsFileName.placeholder = 'Selectează fișierul creds.json';
                 credsFileInput.value = '';
                 return;
             }
