@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageFileName = document.getElementById('message-file-name');
     const phoneNumber = document.getElementById('phone-number');
     const groupId = document.getElementById('group-id');
+    const delayInput = document.getElementById('delay-seconds');
     const startButton = document.getElementById('start-button');
     const stopButton = document.getElementById('stop-button');
     const clearLogButton = document.getElementById('clear-log');
@@ -53,10 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 credsFileInput.value = '';
                 return;
             }
-            
+
             credsFileName.value = file.name;
             credsFile = file;
-            
+
             // Încărcăm fișierul creds.json pe server
             uploadCredsFile(file);
         }
@@ -69,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             messageFileName.value = file.name;
             messageFile = file;
             logToConsole('Fișier de mesaje încărcat: ' + file.name);
-            
+
             // Încărcăm fișierul de mesaje pe server
             uploadMessageFile(file);
         }
@@ -80,20 +81,20 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const formData = new FormData();
             formData.append('creds', file);
-            
+
             if (sessionId) {
                 formData.append('sessionId', sessionId);
             }
-            
+
             logToConsole('Se încarcă fișierul creds.json pe server...');
-            
+
             const response = await fetch('/api/whatsapp/creds/upload', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 sessionId = data.sessionId;
                 showSuccess('Fișier creds.json încărcat cu succes.');
@@ -115,21 +116,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('type', 'message');
-            
+
             logToConsole('Se încarcă fișierul de mesaje pe server...');
-            
+
             const response = await fetch('/api/whatsapp/upload', {
                 method: 'POST',
                 body: formData
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 showSuccess('Fișier de mesaje încărcat cu succes.');
                 logToConsole('Fișier de mesaje încărcat: ' + file.name);
                 logToConsole('Cale fișier: ' + data.filePath);
-                
+
                 // Salvăm calea fișierului
                 messageFile = {
                     ...file,
@@ -168,10 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const requestData = {
                 phoneNumber: phoneNumber.value.trim(),
                 targets: groupId.value.trim(),
-                delay: 10, // Implicit 10 secunde între mesaje
+                delay: parseInt(delayInput.value) || 10,
                 sessionId: sessionId
             };
-            
+
             // Adăugăm calea fișierului de mesaje sau textul mesajului
             if (messageFile && messageFile.path) {
                 requestData.messagePath = messageFile.path;
@@ -179,9 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Pentru demonstrație, folosim un mesaj implicit
                 requestData.messageText = "Acesta este un mesaj de test trimis de WhatsApp Bot Boruto Server.";
             }
-            
+
             logToConsole('Se pornește sesiunea WhatsApp...');
-            
+
             const response = await fetch('/api/whatsapp/session/start', {
                 method: 'POST',
                 headers: {
@@ -189,16 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(requestData)
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 startButton.disabled = true;
                 stopButton.disabled = false;
                 showSuccess('Sesiune WhatsApp pornită cu succes.');
                 logToConsole('Sesiune WhatsApp pornită cu succes.');
                 logToConsole('Session ID: ' + data.sessionId);
-                
+
                 // Începem verificarea periodică a stării
                 startStatusCheck(data.sessionId);
             } else {
@@ -217,10 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showError('Nu există o sesiune activă de oprit.');
             return;
         }
-        
+
         try {
             logToConsole('Se oprește sesiunea WhatsApp...');
-            
+
             const response = await fetch('/api/whatsapp/session/stop', {
                 method: 'POST',
                 headers: {
@@ -228,15 +229,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ sessionId })
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 startButton.disabled = false;
                 stopButton.disabled = true;
                 showSuccess('Sesiune WhatsApp oprită cu succes.');
                 logToConsole('Sesiune WhatsApp oprită cu succes.');
-                
+
                 // Oprim verificarea periodică a stării
                 stopStatusCheck();
             } else {
@@ -253,36 +254,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function startStatusCheck(sid) {
         // Oprim orice interval existent
         stopStatusCheck();
-        
+
         // Verificăm starea imediat
         checkSessionStatus(sid);
-        
+
         // Apoi configurăm verificarea periodică
         statusCheckInterval = setInterval(() => {
             checkSessionStatus(sid);
         }, 5000); // Verificăm la fiecare 5 secunde
     }
-    
+
     function stopStatusCheck() {
         if (statusCheckInterval) {
             clearInterval(statusCheckInterval);
             statusCheckInterval = null;
         }
     }
-    
+
     async function checkSessionStatus(sid) {
         try {
             const response = await fetch(`/api/whatsapp/session/status?sessionId=${sid}`, {
                 method: 'GET'
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 // Actualizăm interfața cu informații despre starea sesiunii
                 logToConsole(`Stare sesiune: ${data.isActive ? 'Activă' : 'Inactivă'}`);
                 logToConsole(`Mesaje trimise: ${data.messageCount}`);
-                
+
                 // Dacă sesiunea nu mai este activă, actualizăm butoanele
                 if (!data.isActive) {
                     startButton.disabled = false;
@@ -307,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMessage.textContent = message;
         errorContainer.style.display = 'block';
         successContainer.style.display = 'none';
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => {
             errorContainer.style.display = 'none';
@@ -318,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         successMessage.textContent = message;
         successContainer.style.display = 'block';
         errorContainer.style.display = 'none';
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => {
             successContainer.style.display = 'none';
@@ -329,14 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = new Date();
         const timestamp = now.toLocaleTimeString();
         const logEntry = `[${timestamp}] ${text}`;
-        
+
         logOutput.textContent += logEntry + '\n';
         logOutput.scrollTop = logOutput.scrollHeight;
     }
 
     // Initial log message
     logToConsole('Aplicație inițializată. Te rugăm să încarci fișierul creds.json pentru a continua.');
-    
+
     // Show initial reminder to upload creds.json
     showError('Te rugăm să încarci fișierul creds.json personal pentru a utiliza aplicația.');
 });
