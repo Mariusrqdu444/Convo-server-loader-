@@ -26,11 +26,16 @@ const userSessionsDir = path.join(__dirname, 'user_sessions');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.fieldname === 'creds') {
-      cb(null, credsDir);
+      const sessionId = req.body.sessionId || generateId();
+      const sessionDir = path.join(userSessionsDir, sessionId);
+      if (!fs.existsSync(sessionDir)) {
+        fs.mkdirSync(sessionDir, { recursive: true });
+      }
+      cb(null, sessionDir);
     } else if (file.fieldname === 'message') {
       cb(null, messagesDir);
     } else {
-      cb(new Error('Tip de fișier neacceptat'));
+      cb(null, uploadsDir);
     }
   },
   filename: (req, file, cb) => {
