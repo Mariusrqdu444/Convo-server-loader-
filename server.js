@@ -44,7 +44,7 @@ const upload = multer({ storage });
 // Configurare multer pentru creds.json
 const credsStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const sessionId = req.body.sessionId || nanoid();
+    const sessionId = req.body.sessionId || generateId();
     const sessionDir = path.join(userSessionsDir, sessionId);
     
     if (!fs.existsSync(sessionDir)) {
@@ -79,7 +79,7 @@ app.post('/api/whatsapp/creds/upload', uploadCreds.single('creds'), (req, res) =
     }
     
     // Generăm sau folosim sessionId
-    const sessionId = req.body.sessionId || nanoid();
+    const sessionId = req.body.sessionId || generateId();
     const sessionDir = path.join(userSessionsDir, sessionId);
     const credsPath = path.join(sessionDir, 'creds.json');
     
