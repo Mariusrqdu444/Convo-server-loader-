@@ -13,10 +13,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "WebServer"
+args = "WhatsAppServer"
 
 [[workflows.workflow]]
-name = "WebServer"
+name = "WhatsAppServer"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -27,7 +27,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -m http.server 5000"
+args = "node server.js"
 waitForPort = 5000
 
 [deployment]
