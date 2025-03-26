@@ -34,8 +34,12 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);
+    if (file.fieldname === 'creds') {
+      cb(null, 'creds.json');
+    } else {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+      cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);
+    }
   }
 });
 
